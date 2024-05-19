@@ -21,25 +21,36 @@ document.getElementById('contactForm').addEventListener('submit', function(event
         message: message
     };
 
+    // Show loading state
+    showLoading(true);
+
     // Send form data using fetch API
-    fetch('/submit-form', {
+    fetch('https://mail-server-omega-one.vercel.app/submit-form', { // Change to your backend URL
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
     })
-    .then(response => response.json())
+    .then(response => {
+        showLoading(false); // Hide loading state
+        return response.json().then(data => ({ status: response.status, body: data }));
+    })
     .then(data => {
-        if (data.error) {
-            alert(data.error);
-        } else {
-            alert(data.message);
+        if (data.status === 200) {
+            alert(data.body.message);
             document.getElementById('contactForm').reset(); // Reset the form
+        } else {
+            throw new Error(data.body.error || 'Unknown error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('There was a problem with the request.');
+        alert('There was a problem with the request: ' + error.message);
     });
 });
+
+function showLoading(isVisible) {
+    var loadingElement = document.getElementById('spinner');
+    loadingElement.className = isVisible ? 'loading visible' : 'loading';
+}
